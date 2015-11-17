@@ -332,7 +332,6 @@
       var littleEndian = this.littleEndian;
       var length = dataView.getUint16(ifdStart, littleEndian);
       var tags = {};
-      var tagId;
       var tagName;
       var tagValue;
       var tagValueOptions;
@@ -345,24 +344,20 @@
 
       for (i = 0; i < length; i++) {
         offset = ifdStart + i * 12 + 2;
-        tagId = dataView.getUint16(offset, littleEndian);
-        tagName = tagNames[tagId];
+        tagName = tagNames[dataView.getUint16(offset, littleEndian)];
 
         if (tagName) {
           if (ignored && inArray(tagName, ignored) > -1) {
             continue;
           }
 
+          tagValue = this.readTagValue(offset, tagName);
           tagValueOptions = Exif.TAG_VALUE_OPTIONS[tagName];
-        }
 
-        tagValue = this.readTagValue(offset, tagName);
+          if (tagValueOptions && isNumber(tagValue)) {
+            tagValue = tagValueOptions[tagValue];
+          }
 
-        if (tagValueOptions && isNumber(tagValue)) {
-          tagValue = tagValueOptions[tagValue];
-        }
-
-        if (tagName) {
           tags[tagName] = tagValue;
         }
       }
