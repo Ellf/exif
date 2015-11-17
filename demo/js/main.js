@@ -33,7 +33,7 @@ window.onload = function () {
     }
   }
 
-  function readExifFromImage() {
+  function readExif() {
     return new Exif(preview.querySelector('img'), options);
   }
 
@@ -69,13 +69,13 @@ window.onload = function () {
     }
   }
 
-  readExifFromImage();
+  readExif();
 
   checkbox.onchange = function (e) {
     var target = e.target;
 
     options[target.name] = target.checked;
-    readExifFromImage();
+    readExif();
   };
 
   fileInput.onchange = function (e) {
