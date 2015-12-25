@@ -4,37 +4,31 @@ window.onload = function () {
 
   var Exif = window.Exif;
   var URL = window.URL || window.webkitURL;
-  var checkbox = document.querySelector('.docs-checkbox');
-  var preview = document.querySelector('.docs-preview');
-  var dropzone = document.querySelector('.docs-dropzone');
-  var showcase = document.querySelector('.docs-showcase');
-  var fileInput = dropzone.querySelector('input[type="file"]');
+  var checkbox = document.getElementsByClassName('docs-checkbox')[0];
+  var preview = document.getElementsByClassName('docs-preview')[0];
+  var dropzone = document.getElementsByClassName('docs-dropzone')[0];
+  var showcase = document.getElementsByClassName('docs-showcase')[0];
+  var fileInput = dropzone.getElementsByTagName('input')[0];
   var options = {
         done: function (tags) {
-          var html = [];
+          var segments = [];
           var tag;
 
           for (tag in tags) {
             if (tags.hasOwnProperty(tag)) {
-              html.push('<strong>' + tag + '</strong>: ' + tags[tag]);
+              segments.push('<strong>' + tag + '</strong>: ' + tags[tag]);
             }
           }
 
-          showcase.innerHTML = '<p>' + html.join('</p><p>') + '</p>';
+          showcase.innerHTML = '<p>' + segments.join('</p><p>') + '</p>';
         },
         fail: function (message) {
           showcase.innerHTML = '<p>' + message + '</p>';
         }
       };
 
-  function empty(element) {
-    while (element.firstChild) {
-      element.removeChild(element.firstChild);
-    }
-  }
-
-  function readExifFromImage() {
-    return new Exif(preview.querySelector('img'), options);
+  function readExif() {
+    return new Exif(preview.getElementsByTagName('img')[0], options);
   }
 
   function readExifFromFile(file) {
@@ -42,17 +36,17 @@ window.onload = function () {
 
     if (file.type === 'image/jpeg') {
       if (URL) {
-        image = document.createElement('img');
+        image = new Image();
 
         image.onload = function () {
+          this.onload = null;
           URL.revokeObjectURL(file);
-          image.onload = null;
         };
 
         image.src = URL.createObjectURL(file);
 
         // Clear existing image
-        empty(preview);
+        preview.innerHTML = '';
 
         preview.appendChild(image);
       }
@@ -61,7 +55,7 @@ window.onload = function () {
       fileInput.value = '';
 
       // Clear previous Exif tags
-      empty(showcase);
+      showcase.innerHTML = '';
 
       return new Exif(file, options);
     } else {
@@ -69,13 +63,13 @@ window.onload = function () {
     }
   }
 
-  readExifFromImage();
+  readExif();
 
   checkbox.onchange = function (e) {
     var target = e.target;
 
     options[target.name] = target.checked;
-    readExifFromImage();
+    readExif();
   };
 
   fileInput.onchange = function (e) {
