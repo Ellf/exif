@@ -22,13 +22,18 @@
   // Variables
   // ---------------------------------------------------------------------------
 
-  var Blob = window.Blob;
-  var DataView = window.DataView;
+  // Globals
   var ArrayBuffer = window.ArrayBuffer;
 
-  var EMPTY_OBJECT = {};
-  var toString = EMPTY_OBJECT.toString;
-  var hasOwnProperty = EMPTY_OBJECT.hasOwnProperty;
+  // RegExps
+  var REGEXP_DATA_URL = /^data\:/;
+  var REGEXP_DATA_URL_HEAD = /^data\:([^\;]+)\;base64,/;
+  var REGEXP_DATA_URL_JPEG = /^data\:image\/jpeg.*;base64,/;
+
+  // Utilities
+  var objectProto = Object.prototype;
+  var toString = objectProto.toString;
+  var hasOwnProperty = objectProto.hasOwnProperty;
 
 
   // Utilities
@@ -79,12 +84,13 @@
   function toArray(obj, offset) {
     var args = [];
 
-    // This is necessary for IE8
-    if (isNumber(offset)) {
-      args.push(offset);
+    offset = offset >= 0 ? offset : 0;
+
+    if (Array.from) {
+      return Array.from(obj).slice(offset);
     }
 
-    return args.slice.apply(obj, args);
+    return args.slice.call(obj, offset);
   }
 
   function inArray(value, arr) {
@@ -113,7 +119,7 @@
         }
       } else if (isObject(obj)) {
         for (i in obj) {
-          if (hasOwnProperty.call(obj, i)) {
+          if (obj.hasOwnProperty(i)) {
             if (callback.call(obj, obj[i], i, obj) === false) {
               break;
             }
@@ -126,38 +132,51 @@
   }
 
   function extend(obj) {
-    var args = toArray(arguments);
+    var args;
 
-    if (args.length > 1) {
+    if (arguments.length > 1) {
+      args = toArray(arguments);
+
+      if (Object.assign) {
+        return Object.assign.apply(Object, args);
+      }
+
       args.shift();
-    }
 
-    each(args, function (arg) {
-      each(arg, function (prop, i) {
-        obj[i] = prop;
+      each(args, function (arg) {
+        each(arg, function (prop, i) {
+          obj[i] = prop;
+        });
       });
-    });
+    }
 
     return obj;
   }
 
-  function proxy(fn, context) {
-    var args = toArray(arguments, 2);
-
-    return function () {
-      return fn.apply(context, args.concat(toArray(arguments)));
-    };
-  }
-
   function getStringFromCharCode(dataView, start, length) {
     var str = '';
-    var i;
+    var i = start;
 
-    for (i = start, length += start; i < length; i++) {
+    for (length += start; i < length; i++) {
       str += String.fromCharCode(dataView.getUint8(i));
     }
 
     return str;
+  }
+
+  function dataURLToArrayBuffer(dataURL) {
+    var base64 = dataURL.replace(REGEXP_DATA_URL_HEAD, '');
+    var binary = atob(base64);
+    var length = binary.length;
+    var arrayBuffer = new ArrayBuffer(length);
+    var dataView = new Uint8Array(arrayBuffer);
+    var i;
+
+    for (i = 0; i < length; i++) {
+      dataView[i] = binary.charCodeAt(i);
+    }
+
+    return arrayBuffer;
   }
 
 
@@ -184,23 +203,25 @@
     constructor: Exif,
 
     init: function () {
+      var _this = this;
       var image = this.image;
       var reader;
-      var read;
       var xhr;
 
-      if (!image || !Blob || !ArrayBuffer || !DataView) {
+      if (!image || !ArrayBuffer) {
         return;
       }
-
-      read = proxy(this.read, this);
 
       // File instance of Blob
       if (image instanceof Blob) {
         reader = new FileReader();
 
+        reader.onerror = reader.onabort = function () {
+          _this.readEnd('Fails to read image as ArrayBuffer');
+        };
+
         reader.onload = function () {
-          read(this.result);
+          _this.read(this.result);
         };
 
         reader.readAsArrayBuffer(image);
@@ -209,18 +230,28 @@
           image = image.src;
         }
 
-        if (isString(image) && /^(https?|data|blob)\:/i.test(image)) {
+        if (isString(image)) {
+
+          // XMLHttpRequest disallows to open a Data URL in some browsers like IE11 and Safari
+          if (REGEXP_DATA_URL.test(image)) {
+            return REGEXP_DATA_URL_JPEG.test(image) ?
+              this.read(dataURLToArrayBuffer(image)) :
+              this.readEnd();
+          }
+
           xhr = new XMLHttpRequest();
 
-          xhr.onload = function () {
-            if (this.status === 200) {
-              read(this.response);
-            }
+          xhr.onerror = xhr.onabort = function () {
+            _this.readEnd('Fails to load image as ArrayBuffer');
           };
 
-          xhr.open('get', image, true);
+          xhr.onload = function () {
+            _this.read(this.response);
+          };
+
+          xhr.open('get', image);
           xhr.responseType = 'arraybuffer';
-          xhr.send(null);
+          xhr.send();
         }
       }
     },
