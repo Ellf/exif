@@ -1,9 +1,10 @@
-# [Exif](https://github.com/fengyuanchen/exif)
+# Exif
 
 > JavaScript Exif reader (only available in the browser).
 
-- [Demo](http://fengyuanchen.github.io/exif)
+- [Homepage](http://fengyuanchen.github.io/exif)
 - [Exif standard version 2.3 (2012)](http://www.cipa.jp/std/documents/e/DC-008-2012_E.pdf)
+
 
 
 ## Install
@@ -15,6 +16,7 @@ npm install @fengyuanchen/exif
 ```html
 <script src="/path/to/exif.js"></script>
 ```
+
 
 
 ## Usage
@@ -109,6 +111,7 @@ new Exif(image, {
   }
 });
 ```
+
 
 
 ## No conflict
