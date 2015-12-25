@@ -18,7 +18,6 @@
   "node": true,
   "browser": true,
   "globals": {
-    "define": true,
-    "Exif": true
+    "define": true
   }
 }
