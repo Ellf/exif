@@ -487,7 +487,7 @@
             for (i = 0; i < count; i++) {
               numerator = dataView.getUint32(valueOffset + 8 * i, littleEndian);
               denominator = dataView.getUint32(valueOffset + 4 + 8 * i, littleEndian);
-              value[i] = value = numerator / denominator;
+              value[i] = numerator / denominator;
             }
           }
 
