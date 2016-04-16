@@ -1,11 +1,11 @@
 /*!
- * Exif v0.1.0
+ * Exif v0.1.1
  * https://github.com/fengyuanchen/exif
  *
- * Copyright (c) 2015 Fengyuan Chen
+ * Copyright (c) 2016 Fengyuan Chen
  * Released under the MIT license
  *
- * Date: 2015-12-25T06:51:28.298Z
+ * Date: 2016-04-16T08:19:39.302Z
  */
 
 (function (global, factory) {
@@ -487,7 +487,7 @@
             for (i = 0; i < count; i++) {
               numerator = dataView.getUint32(valueOffset + 8 * i, littleEndian);
               denominator = dataView.getUint32(valueOffset + 4 + 8 * i, littleEndian);
-              value[i] = value = numerator / denominator;
+              value[i] = numerator / denominator;
             }
           }
 
