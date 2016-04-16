@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 0.1.1 (Apr 16, 2016)
+
+- Fixed a mistake.
+
+
 ## 0.1.0 (Dec 25, 2015)
 
 - Ignores undefined tags.
